@@ -131,6 +131,11 @@ Open PowerShell (x64) and run `vc-helper.ps1` to create the profile if missing a
 
 After configure, copy `build/compile_commands.json` to project root for clangd.
 
+## For Unreal Engine projects
+* Unreal uses UnrealBuildTool (UBT). To get caching:
+  * Global: set SCCACHE_DIR and SCCACHE_CACHE_SIZE as above.
+  * UBT: configure environment or BuildConfiguration.xml to use clang/clang-cl or ensure UBT invokes compilers through sccache. You’ll test on a small module first.
+
 ## Script to check all tool versions
 **Purpose**: one command to verify installed tool versions and spot missing tools.
 Save as `dev-setup/check-tools.ps1` and run from PowerShell.

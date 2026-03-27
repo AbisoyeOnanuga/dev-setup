@@ -1,4 +1,5 @@
-# check-tools.ps1
+# check-tools.ps1 - robust version
+
 $tools = @{
   "cmake"        = { & cmake --version 2>&1 }
   "ninja"        = { & ninja --version 2>&1 }
@@ -28,7 +29,9 @@ foreach ($name in $tools.Keys) {
       Write-Host $out
     }
   } catch {
-    Write-Host "Not found or error running $name: $($_.Exception.Message)" -ForegroundColor Yellow
+    # Use -f formatting to avoid interpolation issues
+    $msg = "Not found or error running {0}: {1}" -f $name, $_.Exception.Message
+    Write-Host $msg -ForegroundColor Yellow
   }
 }
 
