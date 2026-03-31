@@ -1,3 +1,22 @@
+# Dev Setup Bootstrap
+
+## One-time installs
+1. Install LLVM (clang, clangd, clang-format, clang-tidy, lld).
+2. Install CMake and Ninja.
+3. Install sccache.
+4. Install Python 3.x.
+5. Install CLI helpers: ripgrep, fd, fzf (optional but recommended).
+6. Install Visual Studio Installer (for vswhere) if you plan to use MSVC.
+
+## Persistent environment
+- Add `C:\tools\bin` to User PATH (for cl wrapper).
+- Set SCCACHE_DIR:
+  setx SCCACHE_DIR "C:\sccache"
+  setx SCCACHE_CACHE_SIZE "20G"
+
+## Quick verification
+Open PowerShell x64 and run:
+
 # MSVC wrapper script and session helper
 **Purpose**: let sccache intercept cl.exe calls on Windows when you must build with MSVC. Use this only if you want caching for MSVC builds; otherwise prefer sccache clang/clang++ and skip the wrapper.
 
