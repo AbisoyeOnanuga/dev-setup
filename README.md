@@ -1,16 +1,18 @@
-# Overview
-You don’t need to master everything at once. Focus on the high‑ROI items first and use repeatable templates for new projects. Below are clear, step‑by‑step setups for each area you listed, with copy‑paste PowerShell snippets and short explanations so you can apply them to any new project.
-## 1. MSVC wrapper and whether you need it
+# C/C++ Dev Setup on Windows
+
+Reusable templates and step-by-step guides for fast C/C++ builds, editor integration, and terminal productivity on Windows. Start with the high-ROI items and adopt repeatable templates for new projects. Each section below includes copy-paste PowerShell snippets and brief explanations applicable to any CMake-based project.
+
+## 1. MSVC wrapper — when it is needed
 ### Verdict
 
-* If you build with clang/clang++ or clang-cl and use sccache via CC/CXX (or CMake launcher), you do not need a wrapper.
-* If you build with MSVC cl.exe and want sccache to intercept cl calls, a wrapper is the practical option on Windows because cl.exe is not a simple executable you can replace in place.
+* When building with clang/clang++ or clang-cl and using sccache via CC/CXX (or a CMake launcher), a wrapper is not required.
+* When building with MSVC cl.exe and sccache should intercept cl calls, a wrapper is the practical option on Windows because cl.exe is not a simple executable that can be replaced in place.
 
 ### When to use the wrapper
 
-* Use the wrapper only if you want sccache to cache MSVC cl.exe compilations. If you plan to use LLVM toolchain for most builds, prefer sccache clang/clang++ and skip the wrapper.
+* Use the wrapper only when sccache should cache MSVC cl.exe compilations. For LLVM-based builds, prefer sccache clang/clang++ and skip the wrapper.
 
-### Simple wrapper approach (only if you need it)
+### Simple wrapper approach (when required)
 
 1. Create a short folder C:\tools\bin.
 2. Put a tiny cl.bat wrapper that forwards to sccache and the real cl.exe.
@@ -19,7 +21,7 @@ You don’t need to master everything at once. Focus on the high‑ROI items fir
 ### Example wrapper `C:\tools\bin\cl.bat`
     @echo off
     REM wrapper to route cl.exe through sccache
-    REM Adjust REAL_CL to your MSVC cl.exe path if needed
+    REM Adjust REAL_CL to the local MSVC cl.exe path if needed
     set REAL_CL="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.##.#####\bin\Hostx64\x64\cl.exe"
     sccache %REAL_CL% %*
 
@@ -39,7 +41,7 @@ You don’t need to master everything at once. Focus on the high‑ROI items fir
 
 * lld is usually included with LLVM; it’s safe to test on a small module first.
 * On Windows with MSVC toolchain, -fuse-ld=lld may require clang-cl or special flags; test before switching large projects.
-* If you use clang-cl, lld often integrates more smoothly.
+* With clang-cl, lld often integrates more smoothly.
 
 ## 3. Build reproducibility without Docker
 ###  Simple, practical approach
@@ -83,7 +85,7 @@ You don’t need to master everything at once. Focus on the high‑ROI items fir
 ## 5. Toolchain hygiene and vcvars helper
    **Why**: avoid PATH conflicts between msys64, LLVM, and MSVC. Load MSVC env only when needed.
 
-### Add this to your PowerShell profile
+### Add to the PowerShell profile
     function Use-VcVars { param($arch='x64')
         $vswhere = "$env:ProgramFiles(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
         $inst = & $vswhere -latest -products * -property installationPath
@@ -142,7 +144,7 @@ You don’t need to master everything at once. Focus on the high‑ROI items fir
 ### clang-tidy
 * Run as CI check or via clangd (--clang-tidy flag) for inline diagnostics.
 
-## 8. Fast practical checklist you can apply to every new project
+## 8. Per-project checklist
 1. Create project folder and add CMakeLists.txt (or Unreal project).
 2. Run dev-setup\configure-with-sccache.ps1 from project root (it sets CC/CXX and configures build).
 3. Verify sccache --show-stats after first build to confirm caching.
@@ -150,7 +152,7 @@ You don’t need to master everything at once. Focus on the high‑ROI items fir
 5. Open file in Neovim and confirm clangd diagnostics.
 6. Add .clang-format and a pre-commit hook.
 7. Install rg, fd, fzf and add Telescope to Neovim.
-8. If using MSVC and you want caching, decide whether to use wrapper; otherwise use vc helper and prefer clang toolchain for sccache.
+8. If using MSVC with caching, decide whether to use the wrapper; otherwise use the vc helper and prefer the clang toolchain for sccache.
 
 ### Learning resources and videos
 * Look for short, focused videos (10–20 minutes) on:
@@ -159,7 +161,7 @@ You don’t need to master everything at once. Focus on the high‑ROI items fir
     * clang-format + pre-commit integration
     * Using lld with CMake
 
-* Search terms to use on YouTube:
+* Suggested YouTube search terms:
     * sccache cmake ninja windows tutorial
     * clangd compile_commands neovim setup 
     * clang-format pre-commit tutorial 
