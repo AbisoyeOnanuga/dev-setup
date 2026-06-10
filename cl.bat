@@ -1,5 +1,6 @@
 @echo off
-REM cl.bat wrapper to route MSVC cl.exe through sccache
+REM cl.bat — routes MSVC cl.exe through sccache (finds cl via vswhere).
+REM Installed to C:\tools\bin by MSVC-wrapper.ps1. Reference copy kept in repo.
 REM Find latest Visual Studio installation path using vswhere
 setlocal
 for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -property installationPath`) do set VSROOT=%%i

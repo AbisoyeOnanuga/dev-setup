@@ -1,5 +1,8 @@
 # Project Name
 
+> **Template file** — copy into a new CMake project, not read in the dev-setup repo.
+> Comes from [dev-setup/PROJECT-README.md](https://github.com/AbisoyeOnanuga/dev-setup).
+
 ## Quick start (developer)
 1. Open PowerShell x64.
 2. Optional: enable MSVC env:

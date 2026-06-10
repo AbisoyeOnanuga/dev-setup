@@ -1,3 +1,8 @@
+# MSVC-wrapper.ps1
+# WHY:  sccache cannot replace cl.exe in place; this installs a cl.bat shim to C:\tools\bin.
+# WHEN: Run once per machine, only when MSVC builds should be cached with sccache.
+# SEE:  README.md §1 and cl.bat (reference copy in this repo).
+
 # Create wrapper folder
 New-Item -ItemType Directory -Path "C:\tools\bin" -Force | Out-Null
 
@@ -31,4 +36,4 @@ Write-Host "Created wrapper at $wrapperPath"
 # Session helper to prepend tools folder to PATH
 Write-Host "To use the wrapper for this session run:"
 Write-Host '  $env:Path = "C:\tools\bin;$env:Path"'
-Write-Host "Or add C:\tools\bin to your User PATH if you want it persistent."
+Write-Host "Or add C:\tools\bin to User PATH for a persistent setup."

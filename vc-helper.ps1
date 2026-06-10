@@ -1,3 +1,8 @@
+# vc-helper.ps1
+# WHY:  Load MSVC environment (cl, link, includes) on demand without polluting global PATH.
+# WHEN: Run once per machine; then use `vc x64` in any shell before MSVC builds.
+# SEE:  README.md §5.
+
 # Ensure profile exists
 if (-not (Test-Path -Path $PROFILE)) { New-Item -ItemType File -Path $PROFILE -Force | Out-Null }
 

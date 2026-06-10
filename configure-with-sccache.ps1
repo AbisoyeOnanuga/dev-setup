@@ -51,9 +51,11 @@ $tools = @{
   "ninja"   = "ninja --version";
 }
 
+$missing = @()
 foreach ($t in $tools.Keys) {
   try {
     & cmd /c $tools[$t] > $null 2>&1
+    if ($LASTEXITCODE -ne 0) { $missing += $t }
   } catch {
     Write-Host "Missing or not on PATH: $t" -ForegroundColor Yellow
     $missing += $t
@@ -69,7 +71,7 @@ if ($missing) {
 # 2) Ensure we are in a project folder with CMakeLists.txt
 if (-not (Test-Path "./CMakeLists.txt")) {
   Write-Host "No CMakeLists.txt found in current directory: $(Get-Location)" -ForegroundColor Yellow
-  Write-Host "Change directory to your project root (where CMakeLists.txt will live) and re-run." -ForegroundColor Yellow
+  Write-Host "Change directory to the project root (where CMakeLists.txt lives) and re-run." -ForegroundColor Yellow
   Fail "CMakeLists.txt missing."
 }
 
@@ -140,4 +142,4 @@ Write-Host "`nDone." -ForegroundColor Green
 # - sccache can wrap cl.exe but requires a wrapper or using the compiler launcher support in CMake.
 # - If you build with MSVC (cl.exe), prefer running this script from a Developer Command Prompt or call vcvarsall.bat first:
 #   & 'C:\Path\To\VC\Auxiliary\Build\vcvarsall.bat' x64
-# - For MSVC + sccache advanced setup, ask for the wrapper steps (this script uses clang wrappers by default).
+# - For MSVC + sccache, see MSVC-wrapper.ps1 and README.md §1.

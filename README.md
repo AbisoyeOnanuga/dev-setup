@@ -1,6 +1,53 @@
 # C/C++ Dev Setup on Windows
 
-Reusable templates and step-by-step guides for fast C/C++ builds, editor integration, and terminal productivity on Windows. Start with the high-ROI items and adopt repeatable templates for new projects. Each section below includes copy-paste PowerShell snippets and brief explanations applicable to any CMake-based project.
+Reusable templates and step-by-step guides for fast C/C++ builds, editor integration, and terminal productivity on Windows.
+
+**Docs in this repo**
+
+| File | Read this when… |
+|------|-----------------|
+| `README.md` (this file) | Learning what each piece does and how topics fit together |
+| `DEVSETUP.md` | Setting up a new Windows machine for the first time |
+| `tests.md` | Verifying the toolchain after install or changes |
+| `PROJECT-README.md` | Starting a new CMake project — copy into that repo, not read here |
+
+## Quick start
+
+1. Follow [DEVSETUP.md](DEVSETUP.md) to install tools and set `SCCACHE_DIR`.
+2. Run `.\check-tools.ps1` to confirm everything is on PATH.
+3. Run `.\configure-with-sccache.ps1` from `sample-cpp\` to validate the flow.
+
+## Repository map
+
+What each file is for — the main reference when something’s purpose is unclear.
+
+| File | Why it exists | When to use |
+|------|---------------|-------------|
+| `check-tools.ps1` | Prints versions of cmake, clang, sccache, rg, etc.; surfaces missing tools | After install, or on any new machine |
+| `configure-with-sccache.ps1` | Configures a CMake project with `sccache clang` / `clang++`, exports `compile_commands.json`, optional build | Per CMake project, from the project root |
+| `MSVC-wrapper.ps1` | Creates `C:\tools\bin\cl.bat` so sccache can intercept MSVC `cl.exe` | Once per machine — **only** if caching MSVC builds |
+| `cl.bat` | The wrapper itself: finds real `cl.exe` via vswhere, forwards through sccache | Lives in `C:\tools\bin` after running `MSVC-wrapper.ps1`; kept in repo as reference |
+| `vc-helper.ps1` | Adds a `vc` command to the PowerShell profile to load MSVC env on demand | Once per machine when MSVC builds are needed |
+| `CMakePresets.json` | Pins generator and configure flags so `cmake --preset default` is consistent | Copy into new CMake projects |
+| `sample-cpp/` | Tiny CMake project to smoke-test sccache, lld, and clangd | After setup, before trusting a real project |
+| `PROJECT-README.md` | Boilerplate README for other repos using this workflow | Copy into new projects |
+
+## External tools (install separately)
+
+Not stored in this repo — install via winget, LLVM installer, or Visual Studio.
+
+| Tool | Role in this setup |
+|------|-------------------|
+| **sccache** | Compile cache — main rebuild speedup |
+| **clang / clang++** | Default compiler; wraps cleanly with sccache via `CC`/`CXX` |
+| **cmake + ninja** | Build system used by all scripts here |
+| **clangd** | C/C++ language server (needs `compile_commands.json`) |
+| **clang-format / clang-tidy** | Formatting and static analysis |
+| **lld** | Faster linker (`-fuse-ld=lld`) |
+| **ripgrep, fd, fzf** | Fast search and fuzzy find in the terminal; Neovim Telescope uses rg/fd automatically |
+| **Visual Studio + vswhere** | MSVC toolchain — only when MSVC builds are required |
+
+---
 
 ## 1. MSVC wrapper — when it is needed
 ### Verdict
@@ -12,22 +59,26 @@ Reusable templates and step-by-step guides for fast C/C++ builds, editor integra
 
 * Use the wrapper only when sccache should cache MSVC cl.exe compilations. For LLVM-based builds, prefer sccache clang/clang++ and skip the wrapper.
 
-### Simple wrapper approach (when required)
+### Setup (when required)
 
-1. Create a short folder C:\tools\bin.
-2. Put a tiny cl.bat wrapper that forwards to sccache and the real cl.exe.
-3. Prepend C:\tools\bin to PATH when configuring/building.
+This repo ships the wrapper as two files:
 
-### Example wrapper `C:\tools\bin\cl.bat`
-    @echo off
-    REM wrapper to route cl.exe through sccache
-    REM Adjust REAL_CL to the local MSVC cl.exe path if needed
-    set REAL_CL="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.##.#####\bin\Hostx64\x64\cl.exe"
-    sccache %REAL_CL% %*
+* **`cl.bat`** — reference copy; uses vswhere to find `cl.exe`, then runs `sccache` with it.
+* **`MSVC-wrapper.ps1`** — installs that wrapper to `C:\tools\bin\cl.bat`.
 
-### **Usage** (PowerShell session before configure)
-    $env:Path = "C:\tools\bin;$env:Path"
-    cmake -S . -B build -G Ninja ...
+Run once (Admin optional):
+
+```powershell
+.\MSVC-wrapper.ps1
+```
+
+Before an MSVC build session, prepend the tools folder to PATH:
+
+```powershell
+$env:Path = "C:\tools\bin;$env:Path"
+vc x64   # if vc-helper.ps1 was run; loads MSVC env
+cmake -S . -B build -G Ninja ...
+```
 
 ## 2. Fast linker lld and CMake flags
 ### Check if lld is present
@@ -44,29 +95,10 @@ Reusable templates and step-by-step guides for fast C/C++ builds, editor integra
 * With clang-cl, lld often integrates more smoothly.
 
 ## 3. Build reproducibility without Docker
-###  Simple, practical approach
-* Pin tool versions in a dev-setup/versions.txt (CMake, Ninja, LLVM, sccache, Python).
-* Commit a dev-setup.ps1 that installs or verifies those versions and sets up PATH/junctions.
-* Use CMakePresets.json to store configure flags and generator so every dev runs the same configure command.
 
-### Example CMakePresets.json minimal
-    json
-    {
-        "version": 3,
-        "configurePresets": [
-                {
-                "name": "default",
-                "generator": "Ninja",
-                "cacheVariables": {
-                    "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                    "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
-                }
-            }
-        ]
-    }
-
-### Dev setup script idea
-* Create dev-setup/install-tools.ps1 that checks versions and creates short junctions (e.g., C:\tools\llvm) to avoid PATH length issues.
+* Run `check-tools.ps1` after install to record which tool versions are present.
+* Copy `CMakePresets.json` from this repo into each project so `cmake --preset default` always uses the same generator and flags.
+* See `configure-with-sccache.ps1` for the standard per-project configure flow.
 
 ## 4. CLI productivity tools and wiring to Telescope
 ### Install (winget)
@@ -83,9 +115,8 @@ Reusable templates and step-by-step guides for fast C/C++ builds, editor integra
 **Telescope auto-uses** `rg`/`fd` when they are on PATH; no extra wiring required.
 
 ## 5. Toolchain hygiene and vcvars helper
-   **Why**: avoid PATH conflicts between msys64, LLVM, and MSVC. Load MSVC env only when needed.
 
-### Add to the PowerShell profile
+Avoid PATH conflicts between msys64, LLVM, and MSVC by loading MSVC env only in the shell that needs it. Run `vc-helper.ps1` once to install the helper; it adds this to the PowerShell profile:
     function Use-VcVars { param($arch='x64')
         $vswhere = "$env:ProgramFiles(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
         $inst = & $vswhere -latest -products * -property installationPath
@@ -146,7 +177,7 @@ Reusable templates and step-by-step guides for fast C/C++ builds, editor integra
 
 ## 8. Per-project checklist
 1. Create project folder and add CMakeLists.txt (or Unreal project).
-2. Run dev-setup\configure-with-sccache.ps1 from project root (it sets CC/CXX and configures build).
+2. Run `configure-with-sccache.ps1` from the project root (sets CC/CXX and configures build).
 3. Verify sccache --show-stats after first build to confirm caching.
 4. Copy build/compile_commands.json to project root for clangd.
 5. Open file in Neovim and confirm clangd diagnostics.

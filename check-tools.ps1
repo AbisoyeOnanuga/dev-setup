@@ -1,4 +1,8 @@
-# check-tools.ps1 - robust version
+# check-tools.ps1
+# WHY:  Confirm every tool in this setup is installed and on PATH.
+# WHEN: After first install, on a new machine, or when something stops working.
+# SEE:  README.md — External tools table.
+
 
 $tools = @{
   "cmake"        = { & cmake --version 2>&1 }
